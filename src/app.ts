@@ -1,3 +1,4 @@
+import { Router } from './router';
 import { customElement } from '@aurelia/runtime';
 import * as template from './app.html';
 import { HistoryBrowser } from './history-browser';
@@ -8,25 +9,39 @@ export class App {
   public output: string = '';
   public title: string = '';
 
-  private historyBrowser: HistoryBrowser;
+  private left: any;
+  private right: any;
+
+  private router: Router;
+
   constructor() {
-    this.historyBrowser = new HistoryBrowser();
-    this.historyBrowser.activate({
-      callback: (entry, flags) => {
-        this.pathCallback(entry, flags)
-          ;
+    this.router = new Router();
+
+    this.router.activate({
+      reportCallback: (entry, flags) => {
+        this.pathCallback(entry, flags);
       }
     });
+    this.router.addRoute({ name: 'abc', path: '/test/abc', viewports: { 'left': { component: 'abc-component' }, 'right': { component: 'abc-component'} } });
+    this.router.addRoute({ name: 'def', path: '/test/def', viewports: { 'left': { component: 'def-component' }, 'right': { component: 'def-component'} } });
+    this.router.addRoute({ name: 'abc-left', path: '/test/abc-left', viewports: { 'left': { component: 'abc-component' } } });
+    this.router.addRoute({ name: 'abc-right', path: '/test/abc-right', viewports: { 'right': { component: 'abc-component' } } });
+  }
+
+  attached() {
+    console.log('ATTACHED', (<any>this).left);
+    this.router.addViewport("left", this.left);
+    this.router.addViewport("right", this.right);
   }
 
   pathCallback(entry, flags) {
     console.log('app callback', entry, flags, this.title);
     this.output += `Path: ${entry.path} [${entry.index}] "${entry.title}" (${this.stringifyFlags(flags)}) ${JSON.stringify(entry.data)}\n`;
-    this.title = this.historyBrowser.titles.join(' > ');
+    this.title = this.router.historyBrowser.titles.join(' > ');
     if (!entry.title) {
       setTimeout(() => {
-        this.historyBrowser.setEntryTitle(entry.path.split('/').pop() + ' (async)');
-        this.title = this.historyBrowser.titles.join(' > ');
+        this.router.historyBrowser.setEntryTitle(entry.path.split('/').pop() + ' (async)');
+        this.title = this.router.historyBrowser.titles.join(' > ');
       }, 500);
     }
   }
@@ -40,27 +55,36 @@ export class App {
   }
 
   clickAbc() {
-    this.historyBrowser.goto('/test/abc', 'first', { id: 123 });
+    this.router.historyBrowser.goto('/test/abc', 'first', { id: 123 });
+  }
+  clickAbcLeft() {
+    this.router.historyBrowser.goto('/test/abc-left', 'first-left', { id: '123L' });
+  }
+  clickAbcRight() {
+    this.router.historyBrowser.goto('/test/abc-right', 'first-right', { id: '123R' });
   }
   clickDef() {
-    this.historyBrowser.goto('/test/def', 'second', { id: 456 });
+    this.router.historyBrowser.goto('/test/def', 'second', { id: 456 });
   }
   clickReplace() {
-    this.historyBrowser.replace('/test/xyz', 'last', { id: 999 });
+    this.router.historyBrowser.replace('/test/xyz', 'last', { id: 999 });
   }
   clickBack() {
-    this.historyBrowser.back();
+    this.router.historyBrowser.back();
   }
   clickForward() {
-    this.historyBrowser.forward();
+    this.router.historyBrowser.forward();
   }
   clickBack2() {
-    this.historyBrowser.history.go(-2);
+    this.router.historyBrowser.history.go(-2);
   }
   clickForward2() {
-    this.historyBrowser.history.go(2);
+    this.router.historyBrowser.history.go(2);
   }
   clickCancel() {
-    this.historyBrowser.cancel();
+    this.router.historyBrowser.cancel();
+  }
+  clickRefresh() {
+    this.router.historyBrowser.refresh();
   }
 }

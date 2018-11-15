@@ -26,12 +26,12 @@ export class HistoryBrowser {
     public history: any;
 
     private options: any;
-
     private isActive: boolean = false;
 
     private lastHistoryMovement: number;
     private isCancelling: boolean = false;
     private isReplacing: boolean = false;
+    private isRefreshing: boolean = false;
 
     private __path: string; // For development, should be removed
 
@@ -82,6 +82,14 @@ export class HistoryBrowser {
         this.setPath(path, true);
     }
 
+    public refresh(): void {
+        if (!this.currentEntry) {
+            return;
+        }
+        this.isRefreshing = true;
+        this.replace(this.currentEntry.path, this.currentEntry.title, this.currentEntry.data);
+    }
+
     public back(): void {
         this.history.go(-1);
     }
@@ -120,7 +128,7 @@ export class HistoryBrowser {
 
     private pathChanged = (): void => {
         const path: string = this.getPath();
-        console.log('path changed to', path, this.activeEntry);
+        console.log('path changed to', path, this.activeEntry, this.currentEntry);
 
         const navigationFlags: INavigationFlags = {};
 
@@ -136,7 +144,13 @@ export class HistoryBrowser {
             if (this.isReplacing) {
                 this.lastHistoryMovement = 0;
                 this.historyEntries[this.currentEntry.index] = this.currentEntry;
-                navigationFlags.isReplace = true;
+                if (this.isRefreshing) {
+                    navigationFlags.isRefresh = true;
+                    this.isRefreshing = false;
+                }
+                else {
+                    navigationFlags.isReplace = true;
+                }
                 this.isReplacing = false;
             }
             else {
@@ -195,6 +209,11 @@ export class HistoryBrowser {
         // return this.__path;
     }
     private setPath(path: string, replace: boolean = false): void {
+        // More checks, such as parameters, needed
+        if (this.currentEntry && this.currentEntry.path === path && !this.isRefreshing) {
+            return;
+        }
+
         // this.location.hash = path;
         const { pathname, search } = this.location;
         const hash = '#' + path;
