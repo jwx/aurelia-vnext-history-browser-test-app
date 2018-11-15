@@ -1,5 +1,7 @@
 <template>
-  <div>${message}</div>
+  <require from="./components/viewport"></require>
+
+  <p>${message}</p>
 
   <div style="padding: 20px;">
     <button click.trigger="clickAbc()">Abc</button>
@@ -25,9 +27,12 @@
       <pre>${output}</pre>
     </div>
 
-    <div style="padding: 10px;">
+    <!-- <div style="padding: 10px;">
       <pre ref="left" class="viewport">LEFT</pre>
       <pre ref="right" class="viewport">RIGHT</pre>
-    </div>
+    </div> -->
+
+    <viewport name="left"></viewport>
+    <viewport name="right"></viewport>
   </div>
 </template>

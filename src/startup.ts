@@ -1,11 +1,13 @@
+import { DI } from '@aurelia/kernel';
 import { BasicConfiguration } from '@aurelia/jit';
-import { Aurelia } from '@aurelia/runtime';
+import { Aurelia, CustomElementResource } from '@aurelia/runtime';
 import { App } from './app';
+import { ViewportCustomElement } from './components/viewport';
 
-window['au'] = new Aurelia()
-  .register(BasicConfiguration)
+const container = DI.createContainer();
+container.register(BasicConfiguration, <any>ViewportCustomElement, <any>App);
+const component = container.get(CustomElementResource.keyFrom('app'));
 
-  .app({ host: document.querySelector('app'), component: new App() })
-  .start();
-
-
+const au = new Aurelia(container);
+au.app({ host: document.querySelector('app'), component });
+au.start();

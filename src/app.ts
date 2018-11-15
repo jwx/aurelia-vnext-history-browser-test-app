@@ -1,8 +1,9 @@
-import { Router } from './router';
+import { inject } from '@aurelia/kernel';
 import { customElement } from '@aurelia/runtime';
 import * as template from './app.html';
-import { HistoryBrowser } from './history-browser';
+import { Router } from './lib/router';
 
+@inject(Router)
 @customElement({ name: 'app', template })
 export class App {
   message = 'So... we meet again, Mr. World!';
@@ -12,26 +13,22 @@ export class App {
   private left: any;
   private right: any;
 
-  private router: Router;
+  constructor(private router: Router) {
+    console.log('App Router', this.router);
+    this.configureRouter();
+  }
 
-  constructor() {
-    this.router = new Router();
-
+  configureRouter() {
     this.router.activate({
       reportCallback: (entry, flags) => {
         this.pathCallback(entry, flags);
       }
     });
-    this.router.addRoute({ name: 'abc', path: '/test/abc', viewports: { 'left': { component: 'abc-component' }, 'right': { component: 'abc-component'} } });
-    this.router.addRoute({ name: 'def', path: '/test/def', viewports: { 'left': { component: 'def-component' }, 'right': { component: 'def-component'} } });
+    this.router.addRoute({ name: 'abc', path: '/test/abc', viewports: { 'left': { component: 'abc-component' }, 'right': { component: 'abc-component' } } });
+    this.router.addRoute({ name: 'def', path: '/test/def', viewports: { 'left': { component: 'def-component' }, 'right': { component: 'def-component' } } });
     this.router.addRoute({ name: 'abc-left', path: '/test/abc-left', viewports: { 'left': { component: 'abc-component' } } });
     this.router.addRoute({ name: 'abc-right', path: '/test/abc-right', viewports: { 'right': { component: 'abc-component' } } });
-  }
-
-  attached() {
-    console.log('ATTACHED', (<any>this).left);
-    this.router.addViewport("left", this.left);
-    this.router.addViewport("right", this.right);
+    console.log('ROUTER', this.router);
   }
 
   pathCallback(entry, flags) {
