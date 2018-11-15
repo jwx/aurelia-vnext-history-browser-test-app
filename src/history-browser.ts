@@ -1,22 +1,24 @@
-interface IHistoryEntry {
+export interface IHistoryEntry {
     path: string;
     index?: number;
     title?: string;
     data?: Object;
 }
 
-interface INavigationFlags {
+export interface INavigationFlags {
     isFirst?: boolean;
     isNew?: boolean;
     isRefresh?: boolean;
     isForward?: boolean;
     isBack?: boolean;
+    isReplace?: boolean;
     isCancel?: boolean;
 }
 
 export class HistoryBrowser {
     public currentEntry: IHistoryEntry;
-    public historyEntries: IHistoryEntry[] = [];
+    public historyEntries: IHistoryEntry[];
+    public historyOffset: number;
 
     private activeEntry: IHistoryEntry = null;
 
@@ -29,6 +31,7 @@ export class HistoryBrowser {
 
     private lastHistoryMovement: number;
     private isCancelling: boolean = false;
+    private isReplacing: boolean = false;
 
     private __path: string; // For development, should be removed
 
@@ -69,6 +72,16 @@ export class HistoryBrowser {
         // this.pathChanged();
     }
 
+    public replace(path: string, title?: string, data?: Object): void {
+        this.isReplacing = true;
+        this.activeEntry = {
+            path: path,
+            title: title,
+            data: data,
+        };
+        this.setPath(path, true);
+    }
+
     public back(): void {
         this.history.go(-1);
     }
@@ -102,7 +115,7 @@ export class HistoryBrowser {
     }
 
     get titles(): string[] {
-        return this.historyEntries.map((value) => value.title);
+        return this.historyEntries.slice(0, this.currentEntry.index + 1).map((value) => value.title);
     }
 
     private pathChanged = (): void => {
@@ -111,24 +124,36 @@ export class HistoryBrowser {
 
         const navigationFlags: INavigationFlags = {};
 
-        if (this.activeEntry && this.activeEntry.path === path) { // Only happens with new history entries
+        let historyEntry: IHistoryEntry = this.getState('HistoryEntry');
+        if (this.activeEntry && this.activeEntry.path === path) { // Only happens with new history entries (including replacing ones)
             navigationFlags.isNew = true;
-            this.lastHistoryMovement = 1;
-            const historyEntry: IHistoryEntry = this.getState('HistoryEntry');
-            if (!historyEntry) {
-                navigationFlags.isNew = true;
-            }
+            // if (!historyEntry) { // Not needed, always new?
+            //     navigationFlags.isNew = true;
+            // }
+            const index = (this.isReplacing ? this.currentEntry.index : this.history.length - this.historyOffset);
             this.currentEntry = this.activeEntry;
-            this.currentEntry.index = this.historyEntries.length;
-            this.historyEntries.push(this.currentEntry);
+            this.currentEntry.index = index;
+            if (this.isReplacing) {
+                this.lastHistoryMovement = 0;
+                this.historyEntries[this.currentEntry.index] = this.currentEntry;
+                navigationFlags.isReplace = true;
+                this.isReplacing = false;
+            }
+            else {
+                this.lastHistoryMovement = 1;
+                this.historyEntries = this.historyEntries.slice(0, this.currentEntry.index);
+                this.historyEntries.push(this.currentEntry);
+            }
             this.setState('HistoryEntries', this.historyEntries);
+            this.setState('HistoryOffset', this.historyOffset);
             this.setState('HistoryEntry', this.currentEntry);
         } else { // Refresh, history navigation, first navigation, manual navigation or cancel
-            this.historyEntries = this.getState('HistoryEntries') || this.historyEntries || [];
-            let historyEntry: IHistoryEntry = this.getState('HistoryEntry');
+            this.historyEntries = this.historyEntries || this.getState('HistoryEntries') || [];
+            this.historyOffset = this.historyOffset || this.getState('HistoryOffset') || 0;
             if (!historyEntry && !this.currentEntry) {
                 navigationFlags.isNew = true;
                 navigationFlags.isFirst = true;
+                this.historyOffset = this.history.length;
             } else if (!historyEntry) {
                 navigationFlags.isNew = true;
             } else if (!this.currentEntry) {
@@ -142,10 +167,12 @@ export class HistoryBrowser {
             if (!historyEntry) {
                 historyEntry = {
                     path: path,
-                    index: this.historyEntries.length,
+                    index: this.history.length - this.historyOffset,
                 };
+                this.historyEntries = this.historyEntries.slice(0, historyEntry.index);
                 this.historyEntries.push(historyEntry);
                 this.setState('HistoryEntries', this.historyEntries);
+                this.setState('HistoryOffset', this.historyOffset);
                 this.setState('HistoryEntry', historyEntry);
             }
             this.lastHistoryMovement = (this.currentEntry ? historyEntry.index - this.currentEntry.index : 0);
@@ -159,7 +186,7 @@ export class HistoryBrowser {
         }
         this.activeEntry = null;
 
-        console.log('navigated', this.getState('HistoryEntry'), this.getState('HistoryEntries'));
+        console.log('navigated', this.getState('HistoryEntry'), this.historyEntries, this.getState('HistoryOffset'));
         this.callback(this.currentEntry, navigationFlags);
     }
 
@@ -167,8 +194,17 @@ export class HistoryBrowser {
         return this.location.hash.substr(1);
         // return this.__path;
     }
-    private setPath(path: string): void {
-        this.location.hash = path;
+    private setPath(path: string, replace: boolean = false): void {
+        // this.location.hash = path;
+        const { pathname, search } = this.location;
+        const hash = '#' + path;
+        if (replace) {
+            this.history.replaceState({}, null, `${pathname}${search}${hash}`);
+        }
+        else {
+            this.history.pushState({}, null, `${pathname}${search}${hash}`);
+        }
+        this.pathChanged();
     }
     private callback(currentEntry: Object, navigationFlags: INavigationFlags) {
         console.log('callback', currentEntry, navigationFlags);

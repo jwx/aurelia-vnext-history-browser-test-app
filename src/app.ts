@@ -45,6 +45,9 @@ export class App {
   clickDef() {
     this.historyBrowser.goto('/test/def', 'second', { id: 456 });
   }
+  clickReplace() {
+    this.historyBrowser.replace('/test/xyz', 'last', { id: 999 });
+  }
   clickBack() {
     this.historyBrowser.back();
   }
