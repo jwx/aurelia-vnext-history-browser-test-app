@@ -4,7 +4,9 @@ import { Viewport } from './viewport';
 export interface IRoute {
     name: string;
     path: string;
+    title?: string;
     viewports: Object;
+    meta?: Object;
 }
 
 export interface IRouteViewport {
@@ -48,6 +50,9 @@ export class Router {
         const route: IRoute = this.findRoute(entry);
         if (!route) {
             return;
+        }
+        if (route.title) {
+            this.historyBrowser.setEntryTitle(route.title);
         }
 
         const viewports: Viewport[] = [];
