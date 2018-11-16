@@ -54,7 +54,9 @@ export class HistoryBrowser {
         //   console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
         // };
 
-        this.pathChanged();
+        setTimeout(() => {
+            this.setPath(this.getPath(), true);
+        }, 0);
     }
 
     public deactivate(): void {
@@ -123,7 +125,7 @@ export class HistoryBrowser {
     }
 
     get titles(): string[] {
-        return this.historyEntries.slice(0, this.currentEntry.index + 1).map((value) => value.title);
+        return (this.historyEntries ? this.historyEntries.slice(0, this.currentEntry.index + 1).map((value) => value.title) : []);
     }
 
     private pathChanged = (): void => {
@@ -161,7 +163,8 @@ export class HistoryBrowser {
             this.setState('HistoryEntries', this.historyEntries);
             this.setState('HistoryOffset', this.historyOffset);
             this.setState('HistoryEntry', this.currentEntry);
-        } else { // Refresh, history navigation, first navigation, manual navigation or cancel
+        }
+        else { // Refresh, history navigation, first navigation, manual navigation or cancel
             this.historyEntries = this.historyEntries || this.getState('HistoryEntries') || [];
             this.historyOffset = this.historyOffset || this.getState('HistoryOffset') || 0;
             if (!historyEntry && !this.currentEntry) {
