@@ -29,8 +29,14 @@ export class Viewport {
     }
 
     public loadContent(): Promise<boolean> {
-        console.log('Rendering', this.name, this.nextContent);
+        console.log('Loading', this.name, this.nextContent);
         return this.controller.load(this.nextContent);
         this.content = this.nextContent;
+    }
+
+    public mountContent(): Promise<boolean> {
+        console.log('Mounting', this.name, this.nextContent);
+        this.content = this.nextContent;
+        return this.controller.mount();
     }
 }

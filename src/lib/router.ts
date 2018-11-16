@@ -65,27 +65,32 @@ export class Router {
         }
 
         let cancel: boolean = false;
-        let enterPromises: Promise<boolean>[] = viewports.map((value) => value.canEnter());
-        return Promise.all(enterPromises).then((enters: boolean[]) => {
+        return Promise.all(viewports.map((value) => value.canEnter())).then((enters: boolean[]) => {
             if (!flags.isCancel && enters.findIndex((value) => value === false) >= 0) {
                 cancel = true;
                 return Promise.resolve([]);
             }
             else {
-                let loadPromises: Promise<boolean>[] = viewports.map((value) => value.loadContent());
-                return Promise.all(loadPromises);
+                return Promise.all(viewports.map((value) => value.loadContent()));
             }
-        }).then((loads: boolean[]) => { // Should probably load them without replacing viewport content instead!
+        }).then((loads: boolean[]) => {
             if (loads.findIndex((value) => value === false) >= 0) {
                 cancel = true;
                 return Promise.resolve([]);
             }
             else {
-                let leavePromises: Promise<boolean>[] = viewports.map((value) => value.canLeave());
-                return Promise.all(leavePromises);
+                return Promise.all(viewports.map((value) => value.canLeave()));
             }
         }).then((leaves: boolean[]) => {
-            if (!flags.isCancel && leaves.findIndex((value) => value === false) >= 0) {
+            if (leaves.findIndex((value) => value === false) >= 0) {
+                cancel = true;
+                return Promise.resolve([]);
+            }
+            else {
+                return Promise.all(viewports.map((value) => value.mountContent()));
+            }
+        }).then((mounts: boolean[]) => {
+            if (!flags.isCancel && mounts.findIndex((value) => value === false) >= 0) {
                 cancel = true;
             }
             return Promise.resolve(cancel);

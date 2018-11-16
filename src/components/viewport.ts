@@ -15,16 +15,20 @@ export class ViewportCustomElement {
   public blockLeave: boolean = false;
 
   public sub: RenderPlan = null;
+  private nextSub: RenderPlan = null;
 
   constructor(private router: Router, private element: Element) { }
 
   bound() {
-    console.log('viewport bound', this.name, this.element, this.container);
     this.router.addViewport(this.name, this);
   }
 
   public load(content: string): Promise<boolean> {
-    this.sub = createElement(content);
+    this.nextSub = createElement(content);
+    return Promise.resolve(true);
+  }
+  public mount() {
+    this.sub = this.nextSub;
     this.loaded = true;
     return Promise.resolve(true);
   }

@@ -25,21 +25,22 @@ export class App {
         this.pathCallback(entry, flags);
       }
     });
-    this.router.addRoute({ name: 'abc', path: '/test/abc', viewports: { 'left': { component: AbcComponent }, 'right': { component: AbcComponent } } });
-    this.router.addRoute({ name: 'def', path: '/test/def', viewports: { 'left': { component: DefComponent }, 'right': { component: DefComponent } } });
+    this.router.addRoute({ name: 'abc', path: '/test/abc', title: 'Abc Title', viewports: { 'left': { component: AbcComponent }, 'right': { component: AbcComponent } } });
+    this.router.addRoute({ name: 'def', path: '/test/def', title: 'Def Title', viewports: { 'left': { component: DefComponent }, 'right': { component: DefComponent } } });
     this.router.addRoute({ name: 'abc-left', path: '/test/abc-left', viewports: { 'left': { component: AbcComponent } } });
     this.router.addRoute({ name: 'abc-right', path: '/test/abc-right', viewports: { 'right': { component: AbcComponent } } });
+    this.updateTitle();
     console.log('ROUTER', this.router);
   }
 
   pathCallback(entry, flags) {
     console.log('app callback', entry, flags, this.title);
     this.output += `Path: ${entry.path} [${entry.index}] "${entry.title}" (${this.stringifyFlags(flags)}) ${JSON.stringify(entry.data)}\n`;
-    this.title = this.router.historyBrowser.titles.join(' > ');
+    // this.title = this.router.historyBrowser.titles.join(' > ');
     if (!entry.title) {
       setTimeout(() => {
         this.router.historyBrowser.setEntryTitle(entry.path.split('/').pop() + ' (async)');
-        this.title = this.router.historyBrowser.titles.join(' > ');
+        // this.title = this.router.historyBrowser.titles.join(' > ');
       }, 500);
     }
   }
@@ -52,6 +53,10 @@ export class App {
     return outs.join(',');
   }
 
+  updateTitle() {
+    this.title = this.router.historyBrowser.titles.join(' > ');
+    setTimeout(() => this.updateTitle(), 150);
+  }
   clickAbc() {
     this.router.historyBrowser.goto('/test/abc', 'first', { id: 123 });
   }
