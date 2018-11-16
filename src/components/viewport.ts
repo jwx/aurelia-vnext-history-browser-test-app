@@ -1,5 +1,5 @@
 import { inject } from '@aurelia/kernel';
-import { bindable } from "@aurelia/runtime";
+import { bindable, RenderPlan, DOM, createElement } from "@aurelia/runtime";
 import { customElement } from '@aurelia/runtime';
 import * as template from './viewport.html';
 import { Router } from '../lib/router';
@@ -9,11 +9,12 @@ import { Router } from '../lib/router';
 @customElement({ name: 'viewport', template })
 export class ViewportCustomElement {
   @bindable name: string;
-  private container: Element;
 
   public loaded: boolean = false;
   public blockEnter: boolean = false;
   public blockLeave: boolean = false;
+
+  public sub: RenderPlan = null;
 
   constructor(private router: Router, private element: Element) { }
 
@@ -23,7 +24,7 @@ export class ViewportCustomElement {
   }
 
   public load(content: string): Promise<boolean> {
-    this.container.innerHTML = content;
+    this.sub = createElement(content);
     this.loaded = true;
     return Promise.resolve(true);
   }
