@@ -9,11 +9,29 @@ import { Router } from '../lib/router';
 @customElement({ name: 'viewport', template })
 export class ViewportCustomElement {
   @bindable name: string;
+  private container: Element;
+
+  public loaded: boolean = false;
+  public blockEnter: boolean = false;
+  public blockLeave: boolean = false;
 
   constructor(private router: Router, private element: Element) { }
 
   bound() {
-    console.log('viewport bound', this.name, this.element);
-    this.router.addViewport(this.name, this.element);
+    console.log('viewport bound', this.name, this.element, this.container);
+    this.router.addViewport(this.name, this);
+  }
+
+  public load(content: string): Promise<boolean> {
+    this.container.innerHTML = content;
+    this.loaded = true;
+    return Promise.resolve(true);
+  }
+
+  public canEnter(): boolean {
+    return !this.loaded || !this.blockEnter;
+  }
+  public canLeave(): boolean {
+    return !this.loaded || !this.blockLeave;
   }
 }

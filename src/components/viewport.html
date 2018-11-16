@@ -1,5 +1,9 @@
 <template>
-  <div>${name}</div>
+  <div>
+    Viewport: <b>${name}</b>&nbsp;&nbsp;&nbsp;
+    <label><input type="checkbox" checked.two-way="blockEnter"> Block enter</label>
+    <label><input type="checkbox" checked.two-way="blockLeave"> Block leave</label>
+  </div>
 
   <pre ref="container" class="viewport">CONTENT</pre>
 </template>

@@ -14,7 +14,6 @@ export class App {
   private right: any;
 
   constructor(private router: Router) {
-    console.log('App Router', this.router);
     this.configureRouter();
   }
 

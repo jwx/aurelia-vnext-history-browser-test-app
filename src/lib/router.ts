@@ -54,11 +54,41 @@ export class Router {
         for (let vp in route.viewports) {
             let routeViewport: IRouteViewport = route.viewports[vp];
             let viewport = this.findViewport(vp);
-            viewport.setNextContent(routeViewport.component);
-            viewports.push(viewport);
+            if (viewport.setNextContent(routeViewport.component)) {
+                viewports.push(viewport);
+            }
         }
 
-        this.renderViewports(viewports);
+        let cancel: boolean = false;
+        let enterPromises: Promise<boolean>[] = viewports.map((value) => value.canEnter());
+        return Promise.all(enterPromises).then((enters: boolean[]) => {
+            if (!flags.isCancel && enters.findIndex((value) => value === false) >= 0) {
+                cancel = true;
+                return Promise.resolve([]);
+            }
+            else {
+                let loadPromises: Promise<boolean>[] = viewports.map((value) => value.loadContent());
+                return Promise.all(loadPromises);
+            }
+        }).then((loads: boolean[]) => { // Should probably load them without replacing viewport content instead!
+            if (loads.findIndex((value) => value === false) >= 0) {
+                cancel = true;
+                return Promise.resolve([]);
+            }
+            else {
+                let leavePromises: Promise<boolean>[] = viewports.map((value) => value.canLeave());
+                return Promise.all(leavePromises);
+            }
+        }).then((leaves: boolean[]) => {
+            if (!flags.isCancel && leaves.findIndex((value) => value === false) >= 0) {
+                cancel = true;
+            }
+            return Promise.resolve(cancel);
+        }).then((cancel) => {
+            if (cancel) {
+                this.historyBrowser.cancel();
+            }
+        });
     }
 
     public findRoute(entry: IHistoryEntry): IRoute {
@@ -71,12 +101,12 @@ export class Router {
 
     public renderViewports(viewports: Viewport[]) {
         for (let viewport of viewports) {
-            viewport.renderContent();
+            viewport.loadContent();
         }
     }
 
-    public addViewport(name: string, element: any): void {
-        this.viewports[name] = new Viewport(name, element);
+    public addViewport(name: string, controller: any): void {
+        this.viewports[name] = new Viewport(name, controller);
     }
 
     public addRoute(route: IRoute) {
