@@ -57,6 +57,7 @@ export class HistoryBrowser {
         setTimeout(() => {
             this.setPath(this.getPath(), true);
         }, 0);
+        // this.pathChanged();
     }
 
     public deactivate(): void {
@@ -217,13 +218,13 @@ export class HistoryBrowser {
             return;
         }
 
-        // this.location.hash = path;
         const { pathname, search } = this.location;
         const hash = '#' + path;
         if (replace) {
             this.history.replaceState({}, null, `${pathname}${search}${hash}`);
         }
         else {
+            // this.location.hash = hash;
             this.history.pushState({}, null, `${pathname}${search}${hash}`);
         }
         this.pathChanged();

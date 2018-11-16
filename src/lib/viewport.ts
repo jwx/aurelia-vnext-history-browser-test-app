@@ -31,7 +31,6 @@ export class Viewport {
     public loadContent(): Promise<boolean> {
         console.log('Loading', this.name, this.nextContent);
         return this.controller.load(this.nextContent);
-        this.content = this.nextContent;
     }
 
     public mountContent(): Promise<boolean> {
